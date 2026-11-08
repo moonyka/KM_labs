@@ -1,0 +1,9 @@
+{
+  "station": 34,
+  "spacecraft_source": "natural cubic spline of msgr_final.bsp",
+  "eop_interpolation": "natural cubic spline",
+  "eop_units": "xp,yp,dX,dY: mas; TAI-UT1: ms",
+  "max_closure_ns": 2.83650632550234e-05,
+  "max_spacecraft_interpolation_error_m": 0.000236609305567276,
+  "rotation_orthogonality": 4.44089209850063e-16
+}
