@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MESSENGER: запустить копию 3",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/03_stages_1_3/RelWithDebInfo/messenger.exe",
+      "args": ["${input:mode}"],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "CMake: собрать копию 3"
+    }
+  ],
+  "inputs": [
+    {"id": "mode", "type": "pickString", "description": "Выбери расчёт", "options": ["selftest", "orbit", "lighttime", "doppler"], "default": "selftest"}
+  ]
+}

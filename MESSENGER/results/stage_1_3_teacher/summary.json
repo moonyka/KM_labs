@@ -1,0 +1,19 @@
+{
+  "spacecraft_source": "msgr_final.bsp (reference-orbit validation)",
+  "count_epoch": "TAI midpoint (ODF convention)",
+  "count_scale_seconds": 0.001,
+  "eop_epoch_scale": "TAI as specified by teacher",
+  "tt_tdb_source": "de442t.bsp time ephemeris",
+  "reference_convention": "Moyer f_REF = (880/749) * decoded REF_FREQ",
+  "turnaround_ratio": "880/749",
+  "total_type12": 12832,
+  "stride": 1,
+  "used": 12831,
+  "flagged_extreme_observations": 1,
+  "outlier_rule": "abs(observed - median) > 100 * MAD; original rows retained in doppler.csv",
+  "rejected_computations": 0,
+  "raw_residual_rms_hz": 14888802.55107,
+  "residual_mean_hz": 0.0109404760126768,
+  "residual_rms_hz": 0.1761635138996,
+  "residual_max_abs_hz": 6.02256882601068
+}

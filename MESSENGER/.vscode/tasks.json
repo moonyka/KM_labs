@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: настроить копию 3",
+      "type": "process",
+      "command": "cmake",
+      "args": ["-S", "versions/03_stages_1_3", "-B", "build/03_stages_1_3", "-G", "Visual Studio 17 2022", "-A", "x64"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake: собрать копию 3",
+      "type": "process",
+      "command": "cmake",
+      "args": ["--build", "build/03_stages_1_3", "--config", "RelWithDebInfo", "--", "/m:1", "/nr:false"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "dependsOn": "CMake: настроить копию 3",
+      "problemMatcher": ["$msCompile"],
+      "group": {"kind": "build", "isDefault": true}
+    },
+    {
+      "label": "CTest: проверить копию 3",
+      "type": "process",
+      "command": "ctest",
+      "args": ["--test-dir", "build/03_stages_1_3", "-C", "RelWithDebInfo", "--output-on-failure"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "dependsOn": "CMake: собрать копию 3",
+      "problemMatcher": []
+    }
+  ]
+}

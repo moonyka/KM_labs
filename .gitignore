@@ -1,0 +1,7 @@
+**/build/
+**/.venv/
+**/__pycache__/
+*.pyc
+/MESSENGER/data/
+/MESSENGER/vendor/
+/MESSENGER/release_assets/
