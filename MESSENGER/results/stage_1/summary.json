@@ -1,0 +1,12 @@
+{
+  "epoch_jd_tdb": 2455646.83,
+  "duration_hours": 20,
+  "gravity_degree": 160,
+  "solar_radiation_pressure": false,
+  "position_max_m": 981.51879513472,
+  "position_rms_m": 342.460177281275,
+  "position_final_m": 672.420108784794,
+  "accepted_steps": 1666,
+  "rejected_steps": 0,
+  "runtime_s": 29.5198004
+}
