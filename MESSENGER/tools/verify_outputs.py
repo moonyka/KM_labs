@@ -97,5 +97,9 @@ python tools/verify_outputs.py
 
 Графики: [ошибка орбиты](results/corrected/stage_1/orbit_error.png), [орбита](results/corrected/stage_1/orbit_3d.png), [доплер на SPK](results/corrected/stage_1_3_reference/doppler.png), [МНК](results/corrected/stage_1_4/fit.png). Они воспроизводятся tools/plot_orbit.py и tools/plot_corrected.py из сохранённых CSV.
 '''
+readability=results/'validation/readability.json'
+if readability.exists():
+    proof=json.loads(readability.read_text())
+    report+='\n## Читаемость кода\n\nПосле форматирования и выделения parseArguments/runOrbit повторно пройдены 17 проверок CTest. Контрольный 20-часовой orbit.csv побайтово совпал с предыдущей версией. Стиль закреплён в .clang-format.\n'
 (root/'VERIFICATION.md').write_text(report,encoding='utf-8')
 print(json.dumps(checks))

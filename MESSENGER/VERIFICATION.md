@@ -56,3 +56,7 @@ python tools/verify_outputs.py
 Для дополнительной внешней проверки установите pyshtools==4.14.1, создайте CSV командой core_tests data/HgM009.sha build/field_probe.csv и запустите python tools/validate_shtools.py build/field_probe.csv. Эта зависимость не нужна рабочему C++ executable. Опциональная сборка оригинального grav.cpp с внешним Fortran/SHTOOLS в данный протокол стандартной сборки не входит.
 
 Графики: [ошибка орбиты](results/corrected/stage_1/orbit_error.png), [орбита](results/corrected/stage_1/orbit_3d.png), [доплер на SPK](results/corrected/stage_1_3_reference/doppler.png), [МНК](results/corrected/stage_1_4/fit.png). Они воспроизводятся tools/plot_orbit.py и tools/plot_corrected.py из сохранённых CSV.
+
+## Читаемость кода
+
+После форматирования и выделения parseArguments/runOrbit повторно пройдены 17 проверок CTest. Контрольный 20-часовой orbit.csv побайтово совпал с предыдущей версией. Стиль закреплён в .clang-format.

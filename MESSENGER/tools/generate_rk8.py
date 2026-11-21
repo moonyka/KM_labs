@@ -1,5 +1,7 @@
 """Generate DP8 coefficients from the source linked in the practice condition."""
 import ast
+import shutil
+import subprocess
 import hashlib
 import urllib.request
 from fractions import Fraction
@@ -31,3 +33,9 @@ text+='inline constexpr double RK_A[13][13]={\n'+',\n'.join(rows)+'\n};\n'
 text+='inline constexpr double RK_B[13]={'+','.join(cpp(x) for x in table[-1][1:])+'};\n'
 (root/'src/rk8_table.hpp').write_text(text,encoding='utf-8')
 print('Generated 13-stage DP8 tableau')
+
+formatter=shutil.which('clang-format')
+if not formatter and Path('C:/Program Files/LLVM/bin/clang-format.exe').exists():
+    formatter='C:/Program Files/LLVM/bin/clang-format.exe'
+if formatter:
+    subprocess.run([formatter,'-i','-style=file',str(root/'src/rk8_table.hpp')],check=True)
