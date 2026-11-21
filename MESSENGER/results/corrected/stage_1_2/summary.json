@@ -1,0 +1,9 @@
+{
+  "station": 34,
+  "spacecraft_source": "integrated",
+  "eop_interpolation": "natural cubic spline",
+  "eop_units": "xp,yp,dX,dY: mas; TAI-UT1: ms",
+  "max_closure_ns": 7.41894389753297e-05,
+  "max_reference_position_difference_m": 1280.76915590586,
+  "rotation_orthogonality": 3.33066907387547e-16
+}

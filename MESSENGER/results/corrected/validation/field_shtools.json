@@ -1,0 +1,11 @@
+{
+  "reference": "SHTOOLS 4.14.1 MakeGravGridPoint",
+  "gravity_degree": 160,
+  "GM_km3_s2": 22031.868551,
+  "radius_km": 2440,
+  "points_compared": 46,
+  "polar_points_covered_by_Cartesian_tests": 3,
+  "max_acceleration_difference_km_s2": 5.206327882381162e-18,
+  "threshold_km_s2": 2e-15,
+  "passed": true
+}

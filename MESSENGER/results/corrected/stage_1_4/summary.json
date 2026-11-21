@@ -1,0 +1,16 @@
+{
+  "method": "Levenberg-Marquardt, unweighted least squares",
+  "parameters": "six initial Cartesian state corrections",
+  "epoch_et": 354047736.685611,
+  "observation_count": 179,
+  "fit_hours_option": 0,
+  "count_scale_seconds": 0.001,
+  "integration_step_s": 60,
+  "trajectory_interpolation": "quintic Hermite",
+  "initial_rms_hz": 1.442793179913639,
+  "final_rms_hz": 0.3251398541155853,
+  "accepted_iterations": 5,
+  "converged": true,
+  "correction_km_and_km_s": [-0.07667239680373848, 0.04299878115726626, -0.07819409552963037, -8.693340690750908e-06, 1.370783254794028e-05, 1.878984069551313e-06],
+  "fitted_state_km_and_km_s": [5441.595048368958, 5923.172360173966, -15507.67194631282, 0.5972477427820643, -0.007453152435401285, 0.02939277693116278]
+}

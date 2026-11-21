@@ -1,0 +1,20 @@
+{
+  "cumulative_sources_match": true,
+  "ctest_counts": [
+    3,
+    4,
+    5,
+    5
+  ],
+  "ctest_total": 17,
+  "orbit_rows": 1201,
+  "max_step60_step30_position_difference_m": 0.0013662844277758576,
+  "final_step60_step30_position_difference_m": 0.00048293892682667625,
+  "independent_PCK_rotation_matrix_max_difference": 5.81757e-14,
+  "quintic_interpolation_near_pericenter_max_error_m": 8.95338e-05,
+  "shtools_reference_points": 46,
+  "shtools_max_acceleration_difference_km_s2": 5.206327882381162e-18,
+  "doppler_statistics_recomputed_from_csv": true,
+  "fit_statistics_recomputed_from_csv": true,
+  "accepted_fit_steps_strictly_decrease_rms": true
+}

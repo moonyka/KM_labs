@@ -1,5 +1,7 @@
 #pragma once
 #include "lighttime.hpp"
+#include "trajectory.hpp"
+#include <optional>
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
@@ -35,31 +37,31 @@ public:
         return total;
     }
 };
-inline double etMinusTai(double et,int station,const Stations&stations){
+inline double etMinusTai(Epoch et,int station,const Stations&stations){
     const double ttMinusTdb=ephemeris(1000000001,et,1000000000)[0];
     const Vec earthVelocity=vel(ephemeris(399,et,0)),site=stations.geocentric(station,et);
     return 32.184-ttMinusTdb+dot(earthVelocity,site)/(LIGHT_SPEED*LIGHT_SPEED);
 }
 inline double taiOffsetToET(double offset){const double tt=(OBS_JD_BASE-2451545.)*86400.+offset+32.184;double et=tt;for(int i=0;i<3;++i)et=tt-ephemeris(1000000001,et,1000000000)[0];return et;}
-inline double stationTAItoET(double offset,int station,const Stations&stations){const double tai=(OBS_JD_BASE-2451545.)*86400.+offset;double et=taiOffsetToET(offset);for(int i=0;i<3;++i)et=tai+etMinusTai(et,station,stations);return et;}
+inline Epoch stationTAItoET(double offset,int station,const Stations&stations){const double base=(OBS_JD_BASE-2451545.)*86400.;Epoch et(base,offset+32.184);for(int i=0;i<3;++i)et=Epoch(base,offset+etMinusTai(et,station,stations));return et;}
 struct DopplerResult {double computed,residual,roundtrip;};
 inline DopplerResult computeDoppler(const Observation&o,const Ramps&ramps,const LightTime&solver,const Stations&stations){
-    const double a=o.tai-o.count/2,b=o.tai+o.count/2,eta=stationTAItoET(a,o.rx,stations),etb=stationTAItoET(b,o.rx,stations);
+    const double a=o.tai-o.count/2,b=o.tai+o.count/2;const Epoch eta=stationTAItoET(a,o.rx,stations),etb=stationTAItoET(b,o.rx,stations);
     const auto pa=solver.solve(eta,o.tx,o.rx),pb=solver.solve(etb,o.tx,o.rx);const double taua=pa.up_s+pa.down_s,taub=pb.up_s+pb.down_s;
-    const double da=etMinusTai(eta,o.rx,stations),db=etMinusTai(etb,o.rx,stations),dea=etMinusTai(pa.transmitET(),o.tx,stations),deb=etMinusTai(pb.transmitET(),o.tx,stations);
+    const double da=etMinusTai(eta,o.rx,stations),db=etMinusTai(etb,o.rx,stations),dea=etMinusTai(pa.transmitTime(),o.tx,stations),deb=etMinusTai(pb.transmitTime(),o.tx,stations);
     // Keep durations and small time differences separate from large J2000 epochs.
     const double txStart=a-taua+(da-dea),txDuration=o.count-(taub-taua)+(db-da)-(deb-dea);
     const double received=ramps.phase(o.tx,txStart,txDuration)/o.count,ratio=880./749.;const double computed=ratio*(o.reference-received);
     return {computed,o.observed-computed,.5*(taua+taub)};
 }
-inline void runDoppler(const std::string&data,const std::string&out,int stride,double countScale=0.001){
+inline void runDoppler(const std::string&data,const std::string&out,int stride,double countScale=0.001,const std::string&source="integrated",double integrationStep=60){
     const auto observations=readObservations(data+"/obs_4.txt",countScale);const Ramps ramps(data+"/ramps_4.txt");const Stations stations(data);
     const double begin=taiOffsetToET(observations.front().tai-observations.front().count),end=taiOffsetToET(observations.back().tai+observations.back().count);
-    SpacecraftSpline trajectory(begin,end);LightTime solver(stations,[&](double et){return trajectory(et);});
+    SpacecraftSpline trajectory(begin,end);Gravity gravity(160);gravity.load(data+"/HgM009.sha");Dynamics dynamics(gravity);std::optional<NumericTrajectory> numeric;if(source=="integrated")numeric.emplace(dynamics,begin-3600,end+120,ephemeris(-236,begin-3600),integrationStep);LightTime solver(stations,[&](Epoch et){return numeric?(*numeric)(et):trajectory(et);});
     std::filesystem::create_directories(out);std::ofstream f(out+"/doppler.csv");f<<std::setprecision(16)<<"tai_offset_s,station,count_s,reference_hz,observed_hz,computed_hz,residual_hz,roundtrip_s,eligible_for_fit\n";double sum=0,sum2=0,maxabs=0,rawSum2=0;size_t used=0,skipped=0,flagged=0;
     std::ofstream rejected(out+"/rejected.csv");rejected<<"tai_offset_s,station,reason\n";
     for(size_t i=0;i<observations.size();i+=stride){const auto&o=observations[i];try{const auto r=computeDoppler(o,ramps,solver,stations);f<<o.tai<<','<<o.rx<<','<<o.count<<','<<o.reference<<','<<o.observed<<','<<r.computed<<','<<r.residual<<','<<r.roundtrip<<','<<o.eligible<<'\n';rawSum2+=r.residual*r.residual;if(o.eligible){sum+=r.residual;sum2+=r.residual*r.residual;maxabs=std::max(maxabs,std::abs(r.residual));++used;}else{++flagged;rejected<<std::setprecision(16)<<o.tai<<','<<o.rx<<",extreme_observable_100_MAD\n";}}catch(const std::runtime_error&e){++skipped;rejected<<std::setprecision(16)<<o.tai<<','<<o.rx<<",\""<<e.what()<<"\"\n";}}
     if(!used)throw std::runtime_error("No computable Doppler observations; inspect rejected.csv");
-    std::ofstream summary(out+"/summary.json");summary<<std::setprecision(15)<<"{\n  \"spacecraft_source\": \"msgr_final.bsp (reference-orbit validation)\",\n  \"count_epoch\": \"TAI midpoint (ODF convention)\",\n  \"count_scale_seconds\": "<<countScale<<",\n  \"eop_epoch_scale\": \"TAI as specified by teacher\",\n  \"tt_tdb_source\": \"de442t.bsp time ephemeris\",\n  \"reference_convention\": \"Moyer f_REF = (880/749) * decoded REF_FREQ\",\n  \"turnaround_ratio\": \"880/749\",\n  \"total_type12\": "<<observations.size()<<",\n  \"stride\": "<<stride<<",\n  \"used\": "<<used<<",\n  \"flagged_extreme_observations\": "<<flagged<<",\n  \"outlier_rule\": \"abs(observed - median) > 100 * MAD; original rows retained in doppler.csv\",\n  \"rejected_computations\": "<<skipped<<",\n  \"raw_residual_rms_hz\": "<<std::sqrt(rawSum2/(used+flagged))<<",\n  \"residual_mean_hz\": "<<sum/used<<",\n  \"residual_rms_hz\": "<<std::sqrt(sum2/used)<<",\n  \"residual_max_abs_hz\": "<<maxabs<<"\n}\n";
+    std::ofstream summary(out+"/summary.json");summary<<std::setprecision(15)<<"{\n  \"spacecraft_source\": \""<<source<<"\",\n  \"time_representation\": \"compensated two-part seconds; SPICE position corrected by velocity\",\n  \"count_epoch\": \"TAI midpoint (ODF convention)\",\n  \"count_scale_seconds\": "<<countScale<<",\n  \"eop_epoch_scale\": \"TAI as specified by teacher\",\n  \"tt_tdb_source\": \"de442t.bsp time ephemeris\",\n  \"reference_convention\": \"Moyer f_REF = (880/749) * decoded REF_FREQ\",\n  \"turnaround_ratio\": \"880/749\",\n  \"total_type12\": "<<observations.size()<<",\n  \"stride\": "<<stride<<",\n  \"used\": "<<used<<",\n  \"flagged_extreme_observations\": "<<flagged<<",\n  \"outlier_rule\": \"abs(observed - median) > 100 * MAD; original rows retained in doppler.csv\",\n  \"rejected_computations\": "<<skipped<<",\n  \"raw_residual_rms_hz\": "<<std::sqrt(rawSum2/(used+flagged))<<",\n  \"residual_mean_hz\": "<<sum/used<<",\n  \"residual_rms_hz\": "<<std::sqrt(sum2/used)<<",\n  \"residual_max_abs_hz\": "<<maxabs<<"\n}\n";
     std::cout<<"Doppler: used "<<used<<", rejected "<<skipped<<", mean "<<sum/used<<" Hz, RMS "<<std::sqrt(sum2/used)<<" Hz, max "<<maxabs<<" Hz\n";
 }

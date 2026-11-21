@@ -2,18 +2,104 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "MESSENGER: запустить копию 3",
+      "name": "MESSENGER: копия 1",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/01_stage_1/RelWithDebInfo/messenger.exe",
+      "args": [
+        "${input:mode1}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "CMake: собрать копию 1"
+    },
+    {
+      "name": "MESSENGER: копия 2",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/02_stages_1_2/RelWithDebInfo/messenger.exe",
+      "args": [
+        "${input:mode2}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "CMake: собрать копию 2"
+    },
+    {
+      "name": "MESSENGER: копия 3",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/03_stages_1_3/RelWithDebInfo/messenger.exe",
-      "args": ["${input:mode}"],
+      "args": [
+        "${input:mode3}"
+      ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "externalConsole": false,
       "preLaunchTask": "CMake: собрать копию 3"
+    },
+    {
+      "name": "MESSENGER: копия 4",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/04_stages_1_4/RelWithDebInfo/messenger.exe",
+      "args": [
+        "${input:mode4}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "preLaunchTask": "CMake: собрать копию 4"
     }
   ],
   "inputs": [
-    {"id": "mode", "type": "pickString", "description": "Выбери расчёт", "options": ["selftest", "orbit", "lighttime", "doppler"], "default": "selftest"}
+    {
+      "id": "mode1",
+      "type": "pickString",
+      "description": "Режим копии 1",
+      "options": [
+        "selftest",
+        "orbit"
+      ],
+      "default": "selftest"
+    },
+    {
+      "id": "mode2",
+      "type": "pickString",
+      "description": "Режим копии 2",
+      "options": [
+        "selftest",
+        "orbit",
+        "lighttime"
+      ],
+      "default": "selftest"
+    },
+    {
+      "id": "mode3",
+      "type": "pickString",
+      "description": "Режим копии 3",
+      "options": [
+        "selftest",
+        "orbit",
+        "lighttime",
+        "doppler"
+      ],
+      "default": "selftest"
+    },
+    {
+      "id": "mode4",
+      "type": "pickString",
+      "description": "Режим копии 4",
+      "options": [
+        "selftest",
+        "orbit",
+        "lighttime",
+        "doppler",
+        "fit"
+      ],
+      "default": "selftest"
+    }
   ]
 }

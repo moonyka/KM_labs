@@ -9,11 +9,12 @@ struct TempFile {
 };
 int main(){try{
     TempFile obs("observations_");
-    {std::ofstream f(obs.path);f<<"2\n2455643 0 12 500 0 1000 34 34 -12 250000000 ignored columns\n2455643 0 11 500 0 1000 34 34 0 0\n";}
+    {std::ofstream f(obs.path);f<<"2\n2455643 0 12 500 1 1000 34 35 -12 250000000 ignored columns\n2455643 0 11 500 0 1000 34 34 0 0\n";}
     const auto observations=readObservations(obs.path.string());
     expect(observations.size()==1,"Type 12 filter failed");
+    expect(observations[0].rx==34&&observations[0].tx==35,"Receiver/transmitter order failed");
     expect(observations[0].count==.5,"Teacher milliseconds must give 0.5 seconds for 500");
-    expect(observations[0].reference==1&&observations[0].observed==-11.75,"Packed observables failed");
+    expect(std::abs(observations[0].reference-16778.216)<1e-10&&observations[0].observed==-11.75,"Packed observables failed");
     expect(readObservations(obs.path.string(),.01)[0].count==5,"Explicit ODF scale failed");
     bool invalid=false;try{readObservations(obs.path.string(),0);}catch(const std::runtime_error&){invalid=true;}expect(invalid,"Zero count scale accepted");
     TempFile ramp("ramps_");

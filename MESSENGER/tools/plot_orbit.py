@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 parser = argparse.ArgumentParser()
-parser.add_argument('folder', nargs='?', default='results/stage_1')
+parser.add_argument('folder', nargs='?', default='results/corrected/stage_1')
 args = parser.parse_args()
 folder = Path(args.folder)
 with (folder / 'orbit.csv').open(newline='') as file:

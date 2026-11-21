@@ -1,0 +1,17 @@
+{
+  "epoch_jd_tdb": 2455646.83,
+  "duration_hours": 20,
+  "gravity_degree": 160,
+  "solar_radiation_pressure": false,
+  "relativistic_dynamics": "EIH beta=gamma=1",
+  "integrator": "Dormand-Prince RK8 (13 stages)",
+  "step_seconds": 60,
+  "GM_mercury_km3_s2": 22031.868551,
+  "mercury_orientation": "Genova 2019 pole, Stark 2015 rotation formula",
+  "position_max_m": 975.721870255062,
+  "position_rms_m": 341.181634716312,
+  "position_final_m": 669.806351350543,
+  "accepted_steps": 1200,
+  "rejected_steps": 0,
+  "runtime_s": 1.8569046
+}

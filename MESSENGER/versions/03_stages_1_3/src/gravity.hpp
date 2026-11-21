@@ -11,9 +11,11 @@ class Gravity {
     int degree_;
     std::vector<double> c_,s_,a_,b_;
     mutable std::vector<Jet> v_,w_;
+    mutable std::vector<double> p_,dp_;
     static size_t ix(int n,int m){return size_t(n)*(n+1)/2+m;}
 public:
-    double gm=22031.863566,radius=2440;
+    std::string coefficientFile;
+    double gm=22031.868551,radius=2440;
     explicit Gravity(int n=160):degree_(n),c_(ix(n+1,0)),s_(c_.size()),a_(c_.size()),b_(c_.size()),v_(c_.size()),w_(c_.size()){
         c_[0]=1;
         for(int m=0;m<=n;++m)for(int l=m+2;l<=n;++l){
@@ -25,9 +27,10 @@ public:
     int degree()const{return degree_;}
     void set(int n,int m,double c,double s=0){c_.at(ix(n,m))=c;s_.at(ix(n,m))=s;}
     void load(const std::string& path){
+        coefficientFile=path;
         std::ifstream f(path);if(!f)throw std::runtime_error("Cannot open gravity file: "+path);
         std::string line;std::getline(f,line);std::replace(line.begin(),line.end(),',',' ');std::istringstream h(line);
-        double unused;int n,m,normalization;h>>radius>>gm>>unused>>n>>m>>normalization;
+        double unused;int n,m,normalization;double fileRadius,fileGM;h>>fileRadius>>fileGM>>unused>>n>>m>>normalization;
         if(!h||n<degree_||m<degree_||normalization!=1)throw std::runtime_error("Unsupported gravity header/degree/normalization");
         size_t loaded=0;
         while(std::getline(f,line)){std::replace(line.begin(),line.end(),',',' ');std::istringstream r(line);int l,k;double c,s;if(!(r>>l>>k>>c>>s))continue;if(l<0||k<0||k>l)throw std::runtime_error("Invalid gravity coefficient");if(l<=degree_){set(l,k,c,s);++loaded;}}
@@ -53,5 +56,24 @@ public:
         }
         return Jet(gm/radius)*sum;
     }
-    Vec acceleration(const Vec&p)const{return potential(p).d;}
+    Vec accelerationCartesian(const Vec&p)const{return potential(p).d;}
+    Vec acceleration(const Vec&point)const{
+        const double r=norm(point),rho=std::hypot(point[0],point[1]);
+        if(r<1)throw std::runtime_error("Invalid gravity position");
+        if(rho/r<1e-8)return accelerationCartesian(point);
+        if(p_.size()!=c_.size()){p_.resize(c_.size());dp_.resize(c_.size());}
+        const double sn=point[2]/r,cs=rho/r,cl=point[0]/rho,sl=point[1]/rho;
+        std::vector<double> powers(size_t(degree_)+1,1.);for(int n=1;n<=degree_;++n)powers[n]=powers[n-1]*radius/r;
+        p_[0]=1;dp_[0]=0;double radial=1,latitude=0,longitude=0,cm=1,sm=0;
+        for(int m=0;m<=degree_;++m){
+            if(m>0){const double next=cm*cl-sm*sl;sm=sm*cl+cm*sl;cm=next;const size_t k=ix(m,m),prev=ix(m-1,m-1);const double factor=m==1?std::sqrt(3.):std::sqrt((2.*m+1)/(2.*m));p_[k]=factor*cs*p_[prev];dp_[k]=factor*(-sn*p_[prev]+cs*dp_[prev]);}
+            for(int n=m;n<=degree_;++n){const size_t k=ix(n,m);
+                if(n==m+1){const size_t prev=ix(m,m);const double factor=std::sqrt(2.*m+3);p_[k]=factor*sn*p_[prev];dp_[k]=factor*(cs*p_[prev]+sn*dp_[prev]);}
+                if(n>=m+2){const size_t prev=ix(n-1,m),prev2=ix(n-2,m);p_[k]=a_[k]*sn*p_[prev]-b_[k]*p_[prev2];dp_[k]=a_[k]*(cs*p_[prev]+sn*dp_[prev])-b_[k]*dp_[prev2];}
+                if(n>0){const double coefficient=c_[k]*cm+s_[k]*sm;radial+=(n+1)*powers[n]*p_[k]*coefficient;latitude+=powers[n]*dp_[k]*coefficient;longitude+=powers[n]*m*p_[k]*(-c_[k]*sm+s_[k]*cm);}
+            }
+        }
+        const double scale=gm/(r*r),ar=-scale*radial,ap=scale*latitude,al=scale*longitude/cs;
+        return {ar*cs*cl-ap*sn*cl-al*sl,ar*cs*sl-ap*sn*sl+al*cl,ar*sn+ap*cs};
+    }
 };
