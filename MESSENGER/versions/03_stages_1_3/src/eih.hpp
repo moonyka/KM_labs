@@ -11,6 +11,7 @@ struct GravBody
     double potential = 0;
 };
 
+// Ньютоновские ускорения и потенциалы массивных тел для релятивистской поправки.
 inline void prepareEIH(std::vector<GravBody>& bodies)
 {
     for (size_t j = 0; j < bodies.size(); ++j)
@@ -31,6 +32,7 @@ inline void prepareEIH(std::vector<GravBody>& bodies)
     }
 }
 
+// Поправка первого постньютоновского приближения в общей барицентрической системе.
 inline Vec eihCorrection(const Vec& r, const Vec& v, const std::vector<GravBody>& bodies,
                          int excluded = -1)
 {
@@ -61,3 +63,4 @@ inline Vec eihCorrection(const Vec& r, const Vec& v, const std::vector<GravBody>
     }
     return invC2 * correction;
 }
+

@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 
+// Две части времени сохраняют малые добавки к большому числу секунд от эпохи.
 struct Epoch
 {
     double high = 0, low = 0;
@@ -27,3 +28,4 @@ inline double difference(const Epoch& a, const Epoch& b)
 {
     return (a.high - b.high) + (a.low - b.low);
 }
+

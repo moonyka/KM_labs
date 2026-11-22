@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stdexcept>
 using Vec = std::array<double, 3>;
+// Состояние: три координаты в километрах и три компоненты скорости в км/с.
 using State = std::array<double, 6>;
 
 inline Vec operator+(Vec a, const Vec& b)
@@ -79,7 +80,7 @@ inline Vec mtv(const double a[3][3], const Vec& v)
     return r;
 }
 
-// First derivatives of a scalar with respect to Cartesian x, y, z.
+// Значение скалярной функции и её первые производные по трём декартовым координатам.
 struct Jet
 {
     double v = 0;
@@ -129,3 +130,4 @@ inline Jet sqrt(const Jet& a)
     r.d = (0.5 / r.v) * a.d;
     return r;
 }
+

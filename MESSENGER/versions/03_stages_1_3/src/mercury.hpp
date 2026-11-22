@@ -2,6 +2,7 @@
 #include "math.hpp"
 inline constexpr double DEG_TO_RAD = 3.14159265358979323846 / 180.;
 
+// Поворот из осей J2000 во вращающиеся оси Меркурия с учётом прецессии и либраций.
 inline void mercuryRotation(double et, double rotation[3][3])
 {
     const double days = et / 86400., centuries = days / 36525.;
@@ -27,3 +28,4 @@ inline void mercuryRotation(double et, double rotation[3][3])
         rotation[2][i] = pole[i];
     }
 }
+

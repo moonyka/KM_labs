@@ -11,6 +11,7 @@ struct ShGrav
     Gravity field;
 };
 
+// Параметры интерфейса заданы в астрономических единицах и сутках.
 inline ShGrav shGravCreate(int lmax, double gm, double radius)
 {
     ShGrav value{lmax, gm, radius, Gravity(lmax)};
@@ -30,6 +31,7 @@ inline void shGravCalculate(const ShGrav& field, double x, double y, double z, d
     const Vec r = AU_KM * Vec{x, y, z};
     const double distance = norm(r);
     const Vec central = (-field.field.gm / (distance * distance * distance)) * r;
+    // Возвращаем только неоднородную часть: центральное притяжение отдельно добавляет модель.
     const Vec harmonics = field.field.acceleration(r) - central;
     for (int i = 0; i < 3; ++i)
     {
@@ -37,3 +39,4 @@ inline void shGravCalculate(const ShGrav& field, double x, double y, double z, d
     }
 }
 #endif
+

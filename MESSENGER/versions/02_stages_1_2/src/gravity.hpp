@@ -5,8 +5,8 @@
 #include <vector>
 #include <string>
 
-// Real, fully (4-pi) normalized solid harmonics, without Condon-Shortley phase.
-// Cartesian recurrence avoids the longitude singularity on the polar axis.
+// Вещественные гармоники с полной нормировкой 4π, без фазы Кондона — Шортли.
+// Декартова рекурсия позволяет вычислять поле в том числе на полярной оси.
 class Gravity
 {
     int degree_;
@@ -92,7 +92,7 @@ public:
                 ++loaded;
             }
         }
-        // SHA files omit degree zero: the central term is explicitly retained.
+        // В файле коэффициентов нет нулевой степени: центральное притяжение сохраняем явно.
         c_[0] = 1;
         if (loaded + 1 < c_.size())
         {
@@ -218,3 +218,4 @@ public:
                 ar * sn + ap * cs};
     }
 };
+

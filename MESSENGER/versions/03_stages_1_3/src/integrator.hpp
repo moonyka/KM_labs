@@ -33,6 +33,7 @@ public:
         return state_;
     }
 
+    // Продолжение интегрирования до заданного момента с сохранением состояния.
     State to(double target)
     {
         const double direction = target >= time_ ? 1. : -1.;
@@ -42,7 +43,7 @@ public:
             const double h = direction * std::min(step_, std::abs(target - time_));
             State stageDerivatives[RK_STAGES]{};
 
-            // k_i = f(t + c_i*h, s + h*sum(a_ij*k_j)).
+            // Промежуточные состояния и их производные на 13 стадиях одного шага.
             for (int stage = 0; stage < RK_STAGES; ++stage)
             {
                 State stageState = state_;
@@ -61,7 +62,7 @@ public:
                 stageDerivatives[stage] = derivative_(time_ + RK_C[stage] * h, stageState);
             }
 
-            // s_next = s + h*sum(b_i*k_i).
+            // Взвешенная сумма производных обновляет координаты и скорости за один шаг.
             for (int component = 0; component < 6; ++component)
             {
                 double derivativeSum = 0;
@@ -85,3 +86,4 @@ public:
         return state_;
     }
 };
+

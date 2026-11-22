@@ -122,6 +122,7 @@ void runLightTime(const std::string& data, const std::string& out, double epoch,
 }
 #endif
 
+// Настройки расчёта: длительность, шаг, степень гармоник и пути к файлам.
 struct RunOptions
 {
     std::string command = "orbit";
@@ -140,6 +141,7 @@ struct RunOptions
     int iterations = 12;
 };
 
+// Чтение параметров запуска; без аргументов используются значения по умолчанию.
 RunOptions parseArguments(int argc, char** argv)
 {
     RunOptions options;
@@ -280,10 +282,12 @@ void runOrbit(const RunOptions& options)
     require(interval >= step && std::abs(interval / step - std::round(interval / step)) < 1e-10,
             "Output interval must be a multiple of the RK8 step");
 
+    // Загрузка коэффициентов неоднородного поля Меркурия и создание модели движения.
     Gravity gravity(degree);
     gravity.load(data + "/HgM009.sha");
     Dynamics dynamics(gravity);
 
+    // Начальный момент и шесть компонент состояния спутника из эфемерид.
     const double epoch = jdTDBtoET(2455646.83);
     const auto initial = ephemeris(-236, epoch);
 
@@ -297,6 +301,7 @@ void runOrbit(const RunOptions& options)
            "reference_z_km,position_error_m,velocity_error_m_s\n"
         << std::setprecision(16);
 
+    // Интегратор хранит текущее состояние и продолжает расчёт с достигнутого времени.
     Integrator<Dynamics> integrator(dynamics, epoch, initial, step);
     double sumSquaredPositionErrorsM2 = 0, maxPositionErrorM = 0, positionErrorM = 0;
     size_t sampleCount = 0;
@@ -305,8 +310,10 @@ void runOrbit(const RunOptions& options)
     for (double elapsedSeconds = 0;;
          elapsedSeconds = std::min(elapsedSeconds + interval, hours * 3600))
     {
+        // Расчётное состояние и независимое эталонное состояние для того же момента.
         const auto state = integrator.to(epoch + elapsedSeconds),
                    reference = ephemeris(-236, epoch + elapsedSeconds);
+        // Длина вектора отклонения в метрах, максимум и сумма квадратов для итогового СКО.
         positionErrorM = 1000 * norm(pos(state) - pos(reference));
         maxPositionErrorM = std::max(maxPositionErrorM, positionErrorM);
         sumSquaredPositionErrorsM2 += positionErrorM * positionErrorM;
@@ -329,6 +336,7 @@ void runOrbit(const RunOptions& options)
 
     double runtimeSeconds =
         std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
+    // Сохранение настроек и итоговых показателей точности в отдельный файл.
     std::ofstream summary(out + "/summary.json");
     summary << std::setprecision(15)
             << "{\n  \"epoch_jd_tdb\": 2455646.83,\n  \"duration_hours\": " << hours
@@ -365,6 +373,7 @@ int main(int argc, char** argv)
             return 0;
         }
 
+        // Загрузка эфемерид, расчёт орбиты и освобождение ресурсов библиотеки.
         loadKernels(options.data);
 
 #if MESSENGER_STAGE >= 2
@@ -407,3 +416,4 @@ int main(int argc, char** argv)
         return 1;
     }
 }
+

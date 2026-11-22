@@ -30,6 +30,7 @@ inline void loadKernel(const std::string& path)
     spiceCheck();
 }
 
+// Подключение файлов времени, параметров тел и эфемерид.
 inline void loadKernels(const std::string& data)
 {
     erract_c("SET", 0, const_cast<char*>("RETURN"));
@@ -40,6 +41,7 @@ inline void loadKernels(const std::string& data)
     }
 }
 
+// Геометрическое состояние в осях J2000; по умолчанию начало координат — Меркурий.
 inline State ephemeris(int target, double et, int observer = 199)
 {
     State s{};
@@ -105,6 +107,7 @@ class Dynamics
 
     mutable std::map<double, Environment> cache_;
 
+    // Положения и скорости массивных тел относительно барицентра для расчёта возмущений.
     const Environment& environmentAt(double et) const
     {
         const auto found = cache_.find(et);
@@ -152,9 +155,11 @@ public:
         double rotation[3][3];
         mercuryRotation(et, rotation);
         const double distance = norm(r);
+        // Поворот во вращающиеся оси Меркурия и перевод километров в астрономические единицы.
         const Vec bodyFixed = (1 / AU_KM) * mv(rotation, r);
         double harmonicAcceleration[3];
         shGravCalculate(harmonics_, bodyFixed[0], bodyFixed[1], bodyFixed[2], harmonicAcceleration);
+        // Перевод ускорения в км/с²; ниже оно поворачивается обратно в оси J2000.
         const Vec harmonicInKm =
             (AU_KM / (DAY_SECONDS * DAY_SECONDS)) *
             Vec{harmonicAcceleration[0], harmonicAcceleration[1], harmonicAcceleration[2]};
@@ -176,16 +181,18 @@ public:
                e.mercuryCorrection;
     }
 
+    // Правая часть: производные координат равны скоростям, производные скоростей — ускорениям.
     State operator()(double time, const State& state) const
     {
         const Vec totalAcceleration = acceleration(time, state);
         return {
             state[3],
             state[4],
-            state[5], // dr/dt = v.
+            state[5], // Производная координат — скорость.
             totalAcceleration[0],
             totalAcceleration[1],
-            totalAcceleration[2] // dv/dt = a.
+            totalAcceleration[2] // Производная скорости — ускорение.
         };
     }
 };
+
