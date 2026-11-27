@@ -1,0 +1,12 @@
+{
+  "station": 34,
+  "spacecraft_source": "reference",
+  "eop_interpolation": "natural cubic spline",
+  "eop_units": "xp,yp,dX,dY: mas; TAI-UT1: ms",
+  "max_closure_ns": 2.83589239602217e-05,
+  "max_reference_position_difference_m": 0.000236609305567276,
+  "rotation_orthogonality": 3.33066907387547e-16,
+  "trajectory_interpolation": "natural cubic spline",
+  "mercury_orientation": "SPK reference trajectory",
+  "verification_date": "2026-11-27"
+}

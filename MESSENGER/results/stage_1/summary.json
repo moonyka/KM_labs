@@ -3,10 +3,15 @@
   "duration_hours": 20,
   "gravity_degree": 160,
   "solar_radiation_pressure": false,
-  "position_max_m": 981.51879513472,
-  "position_rms_m": 342.460177281275,
-  "position_final_m": 672.420108784794,
-  "accepted_steps": 1666,
+  "relativistic_dynamics": "EIH beta=gamma=1",
+  "integrator": "Dormand-Prince RK8 (13 stages)",
+  "step_seconds": 60,
+  "GM_mercury_km3_s2": 22031.868551,
+  "mercury_orientation": "IAU 2009 / Archinal 2011; explicit Euler rotations",
+  "position_max_m": 975.699840987032,
+  "position_rms_m": 341.18643968911,
+  "position_final_m": 669.802377788582,
+  "accepted_steps": 1200,
   "rejected_steps": 0,
-  "runtime_s": 29.5198004
+  "runtime_s": 1.63478398
 }

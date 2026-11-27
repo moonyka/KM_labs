@@ -46,6 +46,48 @@ int main(int argc, char** argv)
         check(std::abs(orbit.to(0)[0] - 1) < 1e-9, "RK8 backward integration failed");
         std::vector<GravBody> sun{{10, 132712440041.279419, {0, 0, 0}, {0, 0, 0}}};
         prepareEIH(sun);
+        // Ручная задача двух тел: ненулевые a_j и U_j проверяются независимо.
+        std::vector<GravBody> pair{{1, 12., {0, 0, 0}, {1, 2, 3}},
+                                   {2, 20., {3, 4, 0}, {-1, 1, 2}}};
+        prepareEIH(pair);
+        check(std::abs(pair[0].externalPotential - 4.) < 1e-15,
+              "Wrong external potential at body 1");
+        check(std::abs(pair[1].externalPotential - 2.4) < 1e-15,
+              "Wrong external potential at body 2");
+        check(norm(pair[0].newtonianAcceleration - Vec{.48, .64, 0}) < 1e-15,
+              "Wrong Newtonian acceleration at body 1");
+        check(norm(pair[1].newtonianAcceleration - Vec{-.288, -.384, 0}) < 1e-15,
+              "Wrong Newtonian acceleration at body 2");
+        const auto pairCopy = pair;
+        prepareEIH(pair);
+        check(norm(pair[0].newtonianAcceleration - pairCopy[0].newtonianAcceleration) == 0. &&
+                  pair[0].externalPotential == pairCopy[0].externalPotential,
+              "EIH preparation accumulates stale values");
+        // Подготовленные a_j/U_j должны влиять на поправку, а не оставаться мёртвыми данными.
+        auto unpreparedPair = pair;
+        for (auto& body : unpreparedPair)
+        {
+            body.newtonianAcceleration = {};
+            body.externalPotential = 0.;
+        }
+        check(norm(eihCorrection({8, 9, 10}, {2, 3, 4}, pair) -
+                   eihCorrection({8, 9, 10}, {2, 3, 4}, unpreparedPair)) > 1e-12,
+              "Prepared planetary accelerations/potentials are unused");
+        // Эталоны (4-26): независимый покомпонентный расчёт long double.
+        // Третье тело делает ненулевыми все суммы по k, в том числе при исключении i.
+        std::vector<GravBody> threeBodies{
+            {1, 12., {0, 0, 0}, {1, 2, 3}},
+            {2, 20., {3, 4, 0}, {-1, 1, 2}},
+            {3, 30., {-6, 5, 4}, {3, -2, 1}}};
+        prepareEIH(threeBodies);
+        check(norm(eihCorrection({8, 9, 10}, {2, 3, 4}, threeBodies) -
+                   Vec{7.988569872453531115e-11, 1.390477596126376264e-10,
+                       1.354347886473548456e-10}) < 1e-24,
+              "Multi-body EIH differs from Moyer reference");
+        check(norm(eihCorrection(threeBodies[0].r, threeBodies[0].v, threeBodies, 1) -
+                   Vec{-2.329302739692618460e-10, -7.160366600383403910e-10,
+                       -2.317329003132618842e-10}) < 1e-24,
+              "Self-body exclusion in EIH differs from Moyer reference");
         for (const auto& r : std::vector<Vec>{{5e7, 0, 0}, {3e7, 4e7, 1e7}})
         {
             for (const auto& v : std::vector<Vec>{{0, 47, 0}, {10, -20, 5}})

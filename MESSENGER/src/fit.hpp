@@ -216,7 +216,7 @@ inline void runFit(const std::string& data, const std::string& out, int points, 
             << ",\n  \"fit_hours_option\": " << fitHours
             << ",\n  \"count_scale_seconds\": " << countScale
             << ",\n  \"integration_step_s\": " << integrationStep
-            << ",\n  \"trajectory_interpolation\": \"quintic Hermite\",\n  \"initial_rms_hz\": "
+            << ",\n  \"trajectory_interpolation\": \"natural cubic spline\",\n  \"initial_rms_hz\": "
             << initialRms << ",\n  \"final_rms_hz\": " << error
             << ",\n  \"accepted_iterations\": " << accepted
             << ",\n  \"converged\": " << (converged ? "true" : "false")

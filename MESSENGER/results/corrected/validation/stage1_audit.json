@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-27",
+  "platform": "Linux x86_64 / GCC 14.2 / Release",
+  "scope": "stage 1 audit, shared code propagated to four cumulative copies",
+  "ephemeris_files_verified_against_teacher_disk": true,
+  "orientation_model": "IAU 2009 / Archinal 2011",
+  "max_position_difference_step60_step30_m": 0.0013660040775121019,
+  "position_max_m": 975.699840987032,
+  "position_rms_m": 341.18643968911,
+  "position_final_m": 669.802377788582,
+  "old_stages_3_4_results_recomputed": false,
+  "canonical_ctest_passed": 5,
+  "cumulative_ctest_counts": [
+    3,
+    4,
+    5,
+    5
+  ],
+  "independent_rotation_matrix_max_difference": 6.78346e-14,
+  "natural_cubic_near_pericenter_max_error_m": 0.223773,
+  "standalone_demo_max_difference_m": 0.0,
+  "RK8_tableau_regenerated_exactly": true
+}

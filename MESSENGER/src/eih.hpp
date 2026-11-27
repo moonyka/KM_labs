@@ -1,66 +1,97 @@
 #pragma once
 #include "math.hpp"
 #include <vector>
+
 inline constexpr double LIGHT_SPEED_KM_S = 299792.458;
+inline constexpr double PPN_BETA = 1.;
+inline constexpr double PPN_GAMMA = 1.;
 
 struct GravBody
 {
     int id;
     double gm;
-    Vec r, v, a{};
-    double potential = 0;
+    Vec r, v;                      // Барицентрические положение и скорость: км, км/с.
+    Vec newtonianAcceleration{};   // Ускорение тела j от остальных массивных тел: км/с².
+    double externalPotential = 0.; // U_j = sum(k != j) GM_k/r_jk: км²/с², положительная сумма.
 };
 
-// Ньютоновские ускорения и потенциалы массивных тел для релятивистской поправки.
+// Мойер, раздел 4.4.1, (4-27), стр. 4-20; пояснение к (4-26), стр. 4-21.
+// Для каждого массивного тела j вычисляем a_j^N и U_j в текущую эпоху.
+// Они нужны внутри поправок 1/c²; это не повторное добавление сил к аппарату.
+// Вызов: Dynamics::environmentAt -> prepareEIH -> eihCorrection для Меркурия и КА.
 inline void prepareEIH(std::vector<GravBody>& bodies)
 {
     for (size_t j = 0; j < bodies.size(); ++j)
     {
-        auto& b = bodies[j];
-        b.a = {};
-        b.potential = 0;
+        auto& bodyJ = bodies[j];
+        bodyJ.newtonianAcceleration = {};
+        bodyJ.externalPotential = 0.;
         for (size_t k = 0; k < bodies.size(); ++k)
         {
-            if (k != j)
+            if (k == j)
             {
-                const Vec d = bodies[k].r - b.r;
-                const double r = norm(d);
-                b.potential += bodies[k].gm / r;
-                b.a = b.a + (bodies[k].gm / (r * r * r)) * d;
+                continue; // Собственное поле в точке массы не вычисляется.
             }
+            const Vec separationKJ = bodies[k].r - bodyJ.r;
+            const double distanceKJ = norm(separationKJ);
+            if (distanceKJ == 0.)
+            {
+                throw std::runtime_error("Coincident massive bodies in EIH preparation");
+            }
+            bodyJ.externalPotential += bodies[k].gm / distanceKJ;
+            bodyJ.newtonianAcceleration = bodyJ.newtonianAcceleration +
+                (bodies[k].gm / (distanceKJ * distanceKJ * distanceKJ)) * separationKJ;
         }
     }
 }
 
-// Поправка первого постньютоновского приближения в общей барицентрической системе.
-inline Vec eihCorrection(const Vec& r, const Vec& v, const std::vector<GravBody>& bodies,
-                         int excluded = -1)
+// Релятивистская часть (4-26) Мойера, стр. 4-19, при beta = gamma = 1.
+// Ньютоновский член сюда не входит: он отдельно вычисляется в Dynamics::acceleration.
+// excludedId исключает собственную массу, когда целевое тело i — Меркурий.
+inline Vec eihCorrection(const Vec& positionI, const Vec& velocityI,
+                         const std::vector<GravBody>& bodies, int excludedId = -1)
 {
-    double potential = 0;
-    for (const auto& b : bodies)
+    double potentialI = 0.;
+    for (const auto& bodyJ : bodies)
     {
-        if (b.id != excluded)
+        if (bodyJ.id != excludedId)
         {
-            potential += b.gm / norm(b.r - r);
+            potentialI += bodyJ.gm / norm(bodyJ.r - positionI);
         }
     }
-    Vec correction{};
-    const double invC2 = 1 / (LIGHT_SPEED_KM_S * LIGHT_SPEED_KM_S);
-    for (const auto& b : bodies)
-    {
-        if (b.id != excluded)
-        {
-            const Vec d = b.r - r;
-            const double distance = norm(d), invR3 = 1 / (distance * distance * distance),
-                         projected = dot(d, b.v) / distance;
-            const double scalar = dot(v, v) + 2 * dot(b.v, b.v) - 4 * dot(v, b.v) -
-                                  1.5 * projected * projected - 4 * potential - b.potential +
-                                  .5 * dot(d, b.a);
-            correction = correction + (b.gm * invR3 * scalar) * d;
-            correction = correction + (-b.gm * invR3 * dot(d, 4. * v - 3. * b.v)) * (v - b.v);
-            correction = correction + (3.5 * b.gm / distance) * b.a;
-        }
-    }
-    return invC2 * correction;
-}
 
+    Vec correction{};
+    for (const auto& bodyJ : bodies)
+    {
+        if (bodyJ.id == excludedId)
+        {
+            continue;
+        }
+        const Vec separationJI = bodyJ.r - positionI;
+        const double distanceIJ = norm(separationJI);
+        const double gmOverR3 = bodyJ.gm / (distanceIJ * distanceIJ * distanceIJ);
+        const double projectedVelocityJ = dot(separationJI, bodyJ.v) / distanceIJ;
+
+        // Скаляр в фигурных скобках первой суммы (4-26), без единицы Ньютона.
+        const double potentialTerms = -2 * (PPN_BETA + PPN_GAMMA) * potentialI -
+                                      (2 * PPN_BETA - 1) * bodyJ.externalPotential;
+        const double velocityTerms = PPN_GAMMA * dot(velocityI, velocityI) +
+            (1 + PPN_GAMMA) * dot(bodyJ.v, bodyJ.v) -
+            2 * (1 + PPN_GAMMA) * dot(velocityI, bodyJ.v) -
+            1.5 * projectedVelocityJ * projectedVelocityJ;
+        const double accelerationTerm = 0.5 * dot(separationJI, bodyJ.newtonianAcceleration);
+        correction = correction +
+            (gmOverR3 * (potentialTerms + velocityTerms + accelerationTerm)) * separationJI;
+
+        // Вторая сумма (4-26); минус возникает из r_i-r_j = -separationJI.
+        const Vec weightedVelocity = (2 + 2 * PPN_GAMMA) * velocityI -
+                                     (1 + 2 * PPN_GAMMA) * bodyJ.v;
+        correction = correction - (gmOverR3 * dot(separationJI, weightedVelocity)) *
+                                  (velocityI - bodyJ.v);
+
+        // Последняя сумма (4-26): (3+4*gamma)/2 * sum(GM_j*a_j/r_ij).
+        correction = correction + ((3 + 4 * PPN_GAMMA) * 0.5 * bodyJ.gm / distanceIJ) *
+                                  bodyJ.newtonianAcceleration;
+    }
+    return (1 / (LIGHT_SPEED_KM_S * LIGHT_SPEED_KM_S)) * correction;
+}

@@ -16,5 +16,7 @@
   "shtools_max_acceleration_difference_km_s2": 5.206327882381162e-18,
   "doppler_statistics_recomputed_from_csv": true,
   "fit_statistics_recomputed_from_csv": true,
-  "accepted_fit_steps_strictly_decrease_rms": true
+  "accepted_fit_steps_strictly_decrease_rms": true,
+  "historical_version": "2026-11-21, before source audit",
+  "current_stage1_validation": "stage1_audit.json"
 }

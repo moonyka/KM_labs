@@ -3,7 +3,10 @@
   "spacecraft_source": "integrated",
   "eop_interpolation": "natural cubic spline",
   "eop_units": "xp,yp,dX,dY: mas; TAI-UT1: ms",
-  "max_closure_ns": 7.41894389753297e-05,
-  "max_reference_position_difference_m": 1280.76915590586,
-  "rotation_orthogonality": 3.33066907387547e-16
+  "max_closure_ns": 8.30474147702496e-05,
+  "max_reference_position_difference_m": 1280.93879766958,
+  "rotation_orthogonality": 3.33066907387547e-16,
+  "trajectory_interpolation": "natural cubic spline",
+  "mercury_orientation": "IAU 2009 / Archinal 2011",
+  "verification_date": "2026-11-27"
 }

@@ -5,3 +5,6 @@
 /MESSENGER/data/
 /MESSENGER/vendor/
 /MESSENGER/release_assets/
+
+# Локальный протокол загрузки с адресом папки преподавателя.
+/MESSENGER/teacher_data_sha256.json

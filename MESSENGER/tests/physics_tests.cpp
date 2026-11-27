@@ -16,23 +16,8 @@ int main(int argc, char** argv)
     {
         const std::string data = argc > 1 ? argv[1] : "data";
         loadKernels(data);
-        double ra[3] = {281.0082, -.032808, 0}, dec[3] = {61.4164, -.0048464, 0},
-               pm[3] = {329.5469, 6.1385025, 0};
-        double phase[10], libration[5];
-        const double amplitude[5] = {1., -.105231253725171, -.0103439039634868, -.0023786959435392,
-                                     -.000535306724141346};
-        for (int k = 1; k <= 5; ++k)
-        {
-            phase[2 * k - 2] = std::fmod(k * 4.09233445 * 42.71182, 360.);
-            phase[2 * k - 1] = k * 4.09233445 * 36525.;
-            libration[k - 1] = (40. / 3600.) * amplitude[k - 1];
-        }
-        pdpool_c("BODY199_POLE_RA", 3, ra);
-        pdpool_c("BODY199_POLE_DEC", 3, dec);
-        pdpool_c("BODY199_PM", 3, pm);
-        pdpool_c("BODY199_NUT_PREC_PM", 5, libration);
-        pdpool_c("BODY1_NUT_PREC_ANGLES", 10, phase);
-        spiceCheck();
+        // Штатный IAU_MERCURY из pck00010.tpc проверяет параметры и формулу.
+        // Параметры kernel pool не подменяются числами из проверяемой функции.
         double rotationError = 0;
         for (double t : {0., 354358512., -1e8})
         {
@@ -76,8 +61,8 @@ int main(int argc, char** argv)
             interpolationError = std::max(
                 interpolationError, 1000 * norm(dense.mercuryRelative(t) - pos(direct.to(t))));
         }
-        verify(interpolationError < .02,
-               "Quintic trajectory interpolation exceeds 2 cm on validation arc");
+        verify(interpolationError < 1.0,
+               "Cubic trajectory interpolation exceeds 1 m on validation arc");
         Stations stations(data);
         SpacecraftSpline reference(begin, begin + 600);
         LightTime light(stations, [&](Epoch t) { return reference(t); });
@@ -85,7 +70,7 @@ int main(int argc, char** argv)
         verify(std::max(std::abs(path.up_closure_s), std::abs(path.down_closure_s)) < 1e-8,
                "Light-time equation does not close");
         std::cout << "PASS: independent PCK rotation error " << rotationError
-                  << ", dense interpolation " << interpolationError
+                  << ", cubic interpolation " << interpolationError
                   << " m, split-epoch two-way light time\n";
         kclear_c();
         return 0;

@@ -113,7 +113,7 @@ void runLightTime(const std::string& data, const std::string& out, double epoch,
     std::ofstream summary(out + "/summary.json");
     summary << std::setprecision(15) << "{\n  \"station\": " << station
             << ",\n  \"spacecraft_source\": \"" << source
-            << "\",\n  \"eop_interpolation\": \"natural cubic spline\",\n  \"eop_units\": "
+            << "\",\n  \"trajectory_interpolation\": \"natural cubic spline\",\n  \"eop_interpolation\": \"natural cubic spline\",\n  \"eop_units\": "
                "\"xp,yp,dX,dY: mas; TAI-UT1: ms\",\n  \"max_closure_ns\": "
             << closure * 1e9 << ",\n  \"max_reference_position_difference_m\": " << splineError
             << ",\n  \"rotation_orthogonality\": " << orthogonality << "\n}\n";
@@ -345,7 +345,7 @@ void runOrbit(const RunOptions& options)
                "beta=gamma=1\",\n  \"integrator\": \"Dormand-Prince RK8 (13 stages)\",\n  "
                "\"step_seconds\": "
             << step << ",\n  \"GM_mercury_km3_s2\": " << gravity.gm
-            << ",\n  \"mercury_orientation\": \"Genova 2019 pole, Stark 2015 rotation formula\",\n "
+            << ",\n  \"mercury_orientation\": \"IAU 2009 / Archinal 2011; explicit Euler rotations\",\n "
                " \"position_max_m\": "
             << maxPositionErrorM
             << ",\n  \"position_rms_m\": " << std::sqrt(sumSquaredPositionErrorsM2 / sampleCount)

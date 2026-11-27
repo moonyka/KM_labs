@@ -3,7 +3,7 @@ import re
 import json
 
 folder = Path(__file__).resolve().parents[1] / 'vendor' / 'sofa'
-todo = ['xys06a', 'c2ixys', 'era00', 'sp00', 'pom00', 'c2tcio', 'taitt', 'taiutc']
+todo = ['xy06', 'c2txy', 'tttai', 'taiutc']
 seen = set()
 missing = set()
 while todo:
@@ -12,6 +12,8 @@ while todo:
         continue
     seen.add(name)
     source = folder / (name + '.c')
+    if not source.exists():
+        source = folder.parents[1] / 'third_party' / 'sofa' / (name + '.c')
     if not source.exists():
         missing.add(name)
         continue

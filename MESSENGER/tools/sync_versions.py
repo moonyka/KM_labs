@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 root=Path(__file__).resolve().parents[1]
-common=['epoch.hpp','math.hpp','gravity.hpp','shgrav.hpp','mercury.hpp','eih.hpp','spice.hpp','rk8_table.hpp','integrator.hpp']
+common=['epoch.hpp','math.hpp','gravity.hpp','shgrav.hpp','mercury.hpp','mercury_parameters.hpp','eih.hpp','spice.hpp','rk8_table.hpp','integrator.hpp']
 stages={1:common,2:common+['spline.hpp','stations.hpp','lighttime.hpp','trajectory.hpp'],3:common+['spline.hpp','stations.hpp','lighttime.hpp','trajectory.hpp','doppler.hpp'],4:common+['spline.hpp','stations.hpp','lighttime.hpp','trajectory.hpp','doppler.hpp','fit.hpp']}
 for stage,directory in enumerate(sorted((root/'versions').iterdir()),1):
     for name in stages[stage]+['main.cpp']:

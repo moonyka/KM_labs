@@ -85,28 +85,29 @@ public:
         {
             throw std::runtime_error("Unknown DSN station " + std::to_string(id));
         }
-        // de442t contains TT-TDB; EOP epochs in the supplied assignment are TAI.
+        // Письмо от 28.09: TDB -> TT из de442t, затем TT -> TAI через SOFA.
         const double ttMinusTdb = ephemeris(1000000001, et, 1000000000)[0];
-        const double tai = et + ttMinusTdb - 32.184;
-        double tt1, tt2;
-        if (iauTaitt(2451545., tai / 86400., &tt1, &tt2) != 0)
+        const double tt1 = 2451545., tt2 = (et + ttMinusTdb) / 86400.;
+        double tai1, tai2;
+        if (iauTttai(tt1, tt2, &tai1, &tai2) != 0)
         {
             throw std::runtime_error("SOFA time conversion failed");
         }
-        const double mjd = (2451545. - 2400000.5) + tai / 86400.,
-                     mas2rad = 3.14159265358979323846 / (180 * 3600 * 1000.);
-        const double xp = eop_[0](mjd) * mas2rad, yp = eop_[1](mjd) * mas2rad,
-                     tai_ut1 = eop_[2](mjd) * .001, dx = eop_[3](mjd) * mas2rad,
-                     dy = eop_[4](mjd) * mas2rad;
-        double x, y, s, rc2i[3][3], rpom[3][3], rc2t[3][3];
-        iauXys06a(tt1, tt2, &x, &y, &s);
+        const double mjd = (tai1 - 2400000.5) + tai2;
+        const double mas2rad = 3.14159265358979323846 / (180 * 3600 * 1000.);
+        const double xp = eop_[0](mjd) * mas2rad, yp = eop_[1](mjd) * mas2rad;
+        const double taiMinusUt1 = eop_[2](mjd) * .001;
+        const double dx = eop_[3](mjd) * mas2rad, dy = eop_[4](mjd) * mas2rad;
+
+        // CIP по iauXy06; поправки dX/dY из файла преподавателя заданы в mas.
+        double x, y;
+        iauXy06(tt1, tt2, &x, &y);
         x += dx;
         y += dy;
-        s = iauS06(tt1, tt2, x, y);
-        iauC2ixys(x, y, s, rc2i);
-        iauPom00(xp, yp, iauSp00(tt1, tt2), rpom);
-        const double era = iauEra00(2451545., (tai - tai_ut1) / 86400.);
-        iauC2tcio(rc2i, era, rpom, rc2t);
+        const double ut11 = tai1, ut12 = tai2 - taiMinusUt1 / 86400.;
+        double rc2t[3][3];
+        // C2T из письма; ниже транспонирование даёт нужное направление T2C.
+        iauC2txy(tt1, tt2, ut11, ut12, x, y, xp, yp, rc2t);
         if (orthogonality)
         {
             *orthogonality = 0;
@@ -123,6 +124,7 @@ public:
                 }
             }
         }
+        // Файл станций: метры и метры/год, поэтому интервал переводим в годы.
         const double years = ((tt1 - 2453371.5) + tt2) / 365.25;
         Vec itrf = (.001) * (it->second.r + years * it->second.v);
         return mtv(rc2t, itrf);

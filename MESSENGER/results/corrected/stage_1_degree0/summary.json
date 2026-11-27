@@ -1,0 +1,17 @@
+{
+  "epoch_jd_tdb": 2455646.83,
+  "duration_hours": 20,
+  "gravity_degree": 0,
+  "solar_radiation_pressure": false,
+  "relativistic_dynamics": "EIH beta=gamma=1",
+  "integrator": "Dormand-Prince RK8 (13 stages)",
+  "step_seconds": 60,
+  "GM_mercury_km3_s2": 22031.868551,
+  "mercury_orientation": "IAU 2009 / Archinal 2011; explicit Euler rotations",
+  "position_max_m": 1648.24371825926,
+  "position_rms_m": 1013.5698090176,
+  "position_final_m": 1424.96925638994,
+  "accepted_steps": 1200,
+  "rejected_steps": 0,
+  "runtime_s": 0.176770107
+}

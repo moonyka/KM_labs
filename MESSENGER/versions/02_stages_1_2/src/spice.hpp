@@ -122,6 +122,8 @@ class Dynamics
             const auto s = b.id == 199 ? e.mercury : ephemeris(b.id, et, 0);
             e.bodies.push_back({b.id, b.gm, pos(s), vel(s)});
         }
+        // Мойер (4-26), (4-27): подготовка U_j и ньютоновских a_j для этой эпохи.
+        // Повторный запрос той же эпохи использует кеш; состояние КА не кешируется.
         prepareEIH(e.bodies);
         e.mercuryCorrection = eihCorrection(pos(e.mercury), vel(e.mercury), e.bodies, 199);
         if (cache_.size() > 50000)

@@ -7,11 +7,11 @@
   "integrator": "Dormand-Prince RK8 (13 stages)",
   "step_seconds": 30,
   "GM_mercury_km3_s2": 22031.868551,
-  "mercury_orientation": "Genova 2019 pole, Stark 2015 rotation formula",
-  "position_max_m": 975.723057978708,
-  "position_rms_m": 341.181833716262,
-  "position_final_m": 669.806800942727,
+  "mercury_orientation": "IAU 2009 / Archinal 2011; explicit Euler rotations",
+  "position_max_m": 975.701028406336,
+  "position_rms_m": 341.186638615703,
+  "position_final_m": 669.802827070603,
   "accepted_steps": 2400,
   "rejected_steps": 0,
-  "runtime_s": 4.5244751
+  "runtime_s": 2.878086976
 }

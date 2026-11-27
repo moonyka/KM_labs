@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <cmath>
 
+// Натуральный кубический сплайн: Numerical Analysis, 9 ed., 3.5, алгоритм 3.4.
+// second_ хранит S''(x_i); прогонка эквивалентна алгоритму для c_i=S''/2.
 class CubicSpline
 {
     std::vector<double> x_, y_, second_;
