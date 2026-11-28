@@ -100,10 +100,16 @@ int main(int argc, char** argv)
                       "EIH Schwarzschild limit failed");
             }
         }
+        // Произвольные тестовые данные проверяют геометрию без физических констант Меркурия.
+        MercuryParameters synthetic;
+        synthetic.poleRA = {20., 0., 0.};
+        synthetic.poleDec = {60., 0., 0.};
+        synthetic.primeMeridian = {10., 1., 0.};
+        synthetic.relativeAmplitudes = calculateLibrationRatios(.1);
         for (double t : {0., 354358512., -1e8})
         {
             double R[3][3];
-            mercuryRotation(t, R);
+            mercuryRotation(t, R, synthetic);
             for (int i = 0; i < 3; ++i)
             {
                 for (int j = 0; j < 3; ++j)

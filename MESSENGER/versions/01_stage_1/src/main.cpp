@@ -345,7 +345,7 @@ void runOrbit(const RunOptions& options)
                "beta=gamma=1\",\n  \"integrator\": \"Dormand-Prince RK8 (13 stages)\",\n  "
                "\"step_seconds\": "
             << step << ",\n  \"GM_mercury_km3_s2\": " << gravity.gm
-            << ",\n  \"mercury_orientation\": \"IAU 2009 / Archinal 2011; explicit Euler rotations\",\n "
+            << ",\n  \"mercury_orientation\": \"PCK inputs; Kaula integrals and Stark 2015 calculated librations\",\n "
                " \"position_max_m\": "
             << maxPositionErrorM
             << ",\n  \"position_rms_m\": " << std::sqrt(sumSquaredPositionErrorsM2 / sampleCount)

@@ -16,13 +16,19 @@ int main(int argc, char** argv)
     {
         const std::string data = argc > 1 ? argv[1] : "data";
         loadKernels(data);
+        // Здесь отдельно проверяем базовую ориентацию, без либрации.
+        // Рассчитанные амплитуды независимо проверяются libration_tests.
+        const auto rotationParameters = loadMercuryParameters(
+            std::filesystem::path(data).parent_path() / "config" / "mercury_orbit.txt");
+        double zeroLibrations[5]{};
+        pdpool_c("BODY199_NUT_PREC_PM", 5, zeroLibrations);
         // Штатный IAU_MERCURY из pck00010.tpc проверяет параметры и формулу.
         // Параметры kernel pool не подменяются числами из проверяемой функции.
         double rotationError = 0;
         for (double t : {0., 354358512., -1e8})
         {
             double own[3][3], spice[3][3];
-            mercuryRotation(t, own);
+            mercuryRotation(t, own, rotationParameters, 0.);
             pxform_c("J2000", "IAU_MERCURY", t, spice);
             spiceCheck();
             for (int i = 0; i < 3; ++i)
@@ -35,6 +41,8 @@ int main(int argc, char** argv)
         }
         verify(rotationError < 2e-12,
                "Mercury Euler rotation differs from independent CSPICE PCK evaluation");
+        kclear_c();
+        loadKernels(data);
         Gravity gravity(160);
         gravity.load(data + "/HgM009.sha");
         Dynamics dynamics(gravity);

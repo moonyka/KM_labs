@@ -7,11 +7,11 @@
   "integrator": "Dormand-Prince RK8 (13 stages)",
   "step_seconds": 30,
   "GM_mercury_km3_s2": 22031.868551,
-  "mercury_orientation": "IAU 2009 / Archinal 2011; explicit Euler rotations",
-  "position_max_m": 975.701028406336,
-  "position_rms_m": 341.186638615703,
-  "position_final_m": 669.802827070603,
+  "mercury_orientation": "PCK inputs; Kaula integrals and Stark 2015 calculated librations",
+  "position_max_m": 975.701085183117,
+  "position_rms_m": 341.186652655907,
+  "position_final_m": 669.802924120773,
   "accepted_steps": 2400,
   "rejected_steps": 0,
-  "runtime_s": 2.878086976
+  "runtime_s": 4.2852089
 }

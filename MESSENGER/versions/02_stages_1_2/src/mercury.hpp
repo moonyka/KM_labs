@@ -1,6 +1,6 @@
 #pragma once
 #include "math.hpp"
-#include "mercury_parameters.hpp"
+#include "libration.hpp"
 
 inline constexpr double DEG_TO_RAD = 3.14159265358979323846 / 180.;
 
@@ -11,22 +11,39 @@ struct MercuryAngles
     double primeMeridian;  // Угол начального меридиана W, радианы.
 };
 
-// Зависимости alpha(t), delta(t), W(t): Stark et al. (2015), формулы (1), (2).
-// Коэффициенты одного набора IAU 2009 перечислены в mercury_parameters.hpp.
-inline MercuryAngles mercuryAngles(double et)
+// Физические исходные параметры читаются из PCK и файла орбитальных данных.
+// relativeAmplitudes содержит результат формулы (3) Stark, а не готовую таблицу.
+struct MercuryParameters
+{
+    std::array<double, 3> poleRA{}, poleDec{}, primeMeridian{};
+    double phaseAtJ2000Deg = 0;
+    double meanMotionDegDay = 0;
+    double fundamentalLibrationDeg = 0;
+    double eccentricity = 0;
+    std::array<double, 5> relativeAmplitudes{};
+};
+
+// Stark et al. (2015), (1), (2): углы вычисляются для текущей эпохи.
+// В PCK полюс задан полиномами по векам, начальный меридиан — по суткам.
+inline MercuryAngles mercuryAngles(double et, const MercuryParameters& model,
+                                   double librationScale = 1.)
 {
     const double daysSinceJ2000 = et / 86400.;
     const double centuriesSinceJ2000 = daysSinceJ2000 / 36525.;
-    const double alphaDeg = MercuryIAU2009::POLE_RA_DEG +
-                           MercuryIAU2009::POLE_RA_RATE_DEG_CENTURY * centuriesSinceJ2000;
-    const double deltaDeg = MercuryIAU2009::POLE_DEC_DEG +
-                           MercuryIAU2009::POLE_DEC_RATE_DEG_CENTURY * centuriesSinceJ2000;
-    double wDeg = MercuryIAU2009::PRIME_MERIDIAN_DEG +
-                  MercuryIAU2009::SPIN_RATE_DEG_DAY * daysSinceJ2000;
-    for (const auto& term : MercuryIAU2009::LIBRATIONS)
+    const auto polynomial = [](const std::array<double, 3>& a, double t)
     {
-        const double argument = (term.phaseDeg + term.rateDegDay * daysSinceJ2000) * DEG_TO_RAD;
-        wDeg += term.amplitudeDeg * std::sin(argument);
+        return a[0] + t * (a[1] + t * a[2]);
+    };
+    const double alphaDeg = polynomial(model.poleRA, centuriesSinceJ2000);
+    const double deltaDeg = polynomial(model.poleDec, centuriesSinceJ2000);
+    double wDeg = polynomial(model.primeMeridian, daysSinceJ2000);
+    // Один исходный аргумент задаёт все k гармоник: k*n0*(d+t0).
+    for (int k = 1; k <= 5; ++k)
+    {
+        const double argument = k * (model.phaseAtJ2000Deg +
+                                     model.meanMotionDegDay * daysSinceJ2000) * DEG_TO_RAD;
+        wDeg += librationScale * model.fundamentalLibrationDeg *
+                model.relativeAmplitudes[k - 1] * std::sin(argument);
     }
     return {alphaDeg * DEG_TO_RAD, deltaDeg * DEG_TO_RAD,
             std::remainder(wDeg, 360.) * DEG_TO_RAD};
@@ -60,9 +77,10 @@ inline void multiplyRotations(const double left[3][3], const double right[3][3],
 // Для обычных пассивных R1/R3 и астрономических alpha/delta:
 // R = R3(W) * R1(pi/2 - delta) * R3(pi/2 + alpha).
 // Прямое восхождение и склонение полюса не являются самими углами Эйлера.
-inline void mercuryRotation(double et, double rotation[3][3])
+inline void mercuryRotation(double et, double rotation[3][3],
+                            const MercuryParameters& model, double librationScale = 1.)
 {
-    const auto angles = mercuryAngles(et);
+    const auto angles = mercuryAngles(et, model, librationScale);
     const double poleAzimuth = 90 * DEG_TO_RAD + angles.rightAscension;
     const double poleTilt = 90 * DEG_TO_RAD - angles.declination;
     const double spin = angles.primeMeridian;

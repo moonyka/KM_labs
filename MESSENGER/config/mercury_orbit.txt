@@ -1,0 +1,3 @@
+# Эксцентриситет из Stark et al. (2015), раздел 3, страница 7 PDF.
+# https://elib.dlr.de/100865/1/Stark15_PSS.pdf
+eccentricity 0.2056317

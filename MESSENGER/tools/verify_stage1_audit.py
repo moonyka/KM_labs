@@ -7,7 +7,7 @@ import math
 root = Path(__file__).resolve().parents[1]
 results = root / 'results/corrected'
 common = ['epoch.hpp', 'math.hpp', 'gravity.hpp', 'shgrav.hpp', 'mercury.hpp',
-          'mercury_parameters.hpp', 'eih.hpp', 'spice.hpp', 'rk8_table.hpp',
+           'libration.hpp', 'eih.hpp', 'spice.hpp', 'rk8_table.hpp',
           'integrator.hpp', 'main.cpp']
 counts = []
 for stage, directory in enumerate(sorted((root / 'versions').iterdir()), 1):
@@ -21,7 +21,7 @@ for stage, directory in enumerate(sorted((root / 'versions').iterdir()), 1):
         assert 'Test Failed.' not in text, directory.name
         counts.append(text.count('Test Passed.'))
 if counts:
-    assert counts == [3, 4, 5, 5], counts
+    assert counts == [4, 5, 6, 6], counts
 
 def rows(path):
     with path.open(newline='', encoding='utf-8-sig') as stream:
@@ -37,7 +37,7 @@ assert summary['accepted_steps'] == 1200 and summary['step_seconds'] == 60
 assert abs(max(errors) - summary['position_max_m']) < 1e-9
 assert abs(math.sqrt(sum(e*e for e in errors)/len(errors)) - summary['position_rms_m']) < 1e-9
 assert abs(errors[-1] - summary['position_final_m']) < 1e-9
-assert 'IAU 2009' in summary['mercury_orientation']
+assert 'calculated librations' in summary['mercury_orientation']
 delta = max(1000*math.sqrt(sum((float(x[k])-float(y[k]))**2
                               for k in ('x_km', 'y_km', 'z_km')))
             for x, y in zip(a, b))

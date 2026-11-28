@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <string>
 #include <map>
+#include <fstream>
 
 inline void spiceCheck()
 {
@@ -93,10 +94,74 @@ inline double jdTDBtoET(double jd)
     return (jd - 2451545.) * 86400.;
 }
 
+// Из PCK берём измеренные параметры полюса, вращения и основной либрации.
+// Готовые высшие амплитуды и отдельные фазы из PCK здесь не используются.
+inline MercuryParameters loadMercuryParameters(const std::filesystem::path& orbitInput)
+{
+    MercuryParameters model;
+    const auto readPool = [](const char* name, int count, double* values)
+    {
+        SpiceInt received = 0;
+        SpiceBoolean found = SPICEFALSE;
+        gdpool_c(name, 0, count, &received, values, &found);
+        spiceCheck();
+        if (!found || received != count)
+        {
+            throw std::runtime_error(std::string("Missing PCK parameter: ") + name);
+        }
+        for (int i = 0; i < count; ++i)
+        {
+            if (!std::isfinite(values[i]))
+            {
+                throw std::runtime_error(std::string("Invalid PCK parameter: ") + name);
+            }
+        }
+    };
+    readPool("BODY199_POLE_RA", 3, model.poleRA.data());
+    readPool("BODY199_POLE_DEC", 3, model.poleDec.data());
+    readPool("BODY199_PM", 3, model.primeMeridian.data());
+    readPool("BODY199_NUT_PREC_PM", 1, &model.fundamentalLibrationDeg);
+    double argument[2];
+    readPool("BODY1_NUT_PREC_ANGLES", 2, argument);
+    model.phaseAtJ2000Deg = argument[0];
+    model.meanMotionDegDay = argument[1] / 36525.;
+
+    // Эксцентриситет — отдельное исходное наблюдаемое значение из статьи Stark.
+    std::ifstream input(orbitInput);
+    if (!input)
+    {
+        throw std::runtime_error("Cannot open Mercury orbit inputs: " + orbitInput.string());
+    }
+    bool hasEccentricity = false;
+    std::string key;
+    while (input >> key)
+    {
+        if (key.front() == '#')
+        {
+            std::string comment;
+            std::getline(input, comment);
+            continue;
+        }
+        if (key != "eccentricity" || hasEccentricity || !(input >> model.eccentricity))
+        {
+            throw std::runtime_error("Invalid Mercury orbit inputs");
+        }
+        hasEccentricity = true;
+    }
+    if (!hasEccentricity)
+    {
+        throw std::runtime_error("Missing Mercury eccentricity");
+    }
+    // Stark (3): все пять отношений вычисляются из e один раз при создании модели.
+    model.relativeAmplitudes = calculateLibrationRatios(model.eccentricity);
+    return model;
+}
+
 class Dynamics
 {
     const Gravity& gravity_;
     ShGrav harmonics_;
+    MercuryParameters rotationParameters_;
 
     struct Environment
     {
@@ -138,7 +203,10 @@ public:
         : gravity_(g),
           harmonics_(shGravCreate(g.degree(),
                                   g.gm * DAY_SECONDS * DAY_SECONDS / (AU_KM * AU_KM * AU_KM),
-                                  g.radius / AU_KM))
+                                  g.radius / AU_KM)),
+          rotationParameters_(loadMercuryParameters(
+              std::filesystem::path(g.coefficientFile).parent_path().parent_path() /
+              "config" / "mercury_orbit.txt"))
     {
         if (g.coefficientFile.empty())
         {
@@ -155,7 +223,7 @@ public:
         // Поле Меркурия: центральное притяжение и гармоники.
         const Vec r = pos(s);
         double rotation[3][3];
-        mercuryRotation(et, rotation);
+        mercuryRotation(et, rotation, rotationParameters_);
         const double distance = norm(r);
         // Поворот во вращающиеся оси Меркурия и перевод километров в астрономические единицы.
         const Vec bodyFixed = (1 / AU_KM) * mv(rotation, r);
